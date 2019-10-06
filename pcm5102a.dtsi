@@ -55,7 +55,6 @@ USES_PIN( P9_31 );
 	sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "PCM5102A";
-		simple-audio-card,format = "i2s";
 
 		// "off-codec widgets"
 		// simple-audio-card,widgets { };
