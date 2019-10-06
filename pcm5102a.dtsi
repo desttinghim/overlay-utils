@@ -1,0 +1,87 @@
+#include "subarctic/pinctrl.h"
+#include "bone/pins.h"
+#include "gpio.h"
+
+USES_PIN( P9_25 );
+USES_PIN( P9_28 );
+USES_PIN( P9_29 );
+USES_PIN( P9_31 );
+
+&am33xx_pinmux {
+	asp0_pins: asp0 {
+		pinctrl-single,pins = <
+			PIN_IN_PULLDOWN(  P9_25, 0 )  // tx hclk
+			PIN_IO_PULLDOWN(  P9_31, 0 )  // tx clk
+			PIN_IO_PULLDOWN(  P9_29, 0 )  // tx fs
+			PIN_OUT_PULLDOWN( P9_28, 2 )  // data 2
+		>;
+	};
+};
+
+&mcasp0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&asp0_pins>;
+	status = "okay";
+	op-mode = <0>; // MCASP_IIS_MODE
+	tdm-slots = <2>;
+	num-serializer = <4>;
+	serial-dir = < /* 0: Inactive, 1: TX, 2: RX */
+			0 0 1 0
+		>;
+	tx-num-evt = <32>;
+	rx-num-evt = <32>;
+};
+
+
+/ {
+	clk_mcasp0_fixed: clk_mcasp0_fixed {
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <24576000>;
+	};
+
+	clk_mcasp0: clk_mcasp0 {
+		#clock-cells = <0>;
+		compatible = "gpio-gate-clock";
+		clocks = <&clk_mcasp0_fixed>;
+		enable-gpios = <&gpio1 27 0>; /* BeagleBone Black Clk enable on GPIO1_27 */
+	};
+
+	pcm5102a: pcm5102a {
+		#sound-dai-cells = <0>;
+		compatible = "ti,pcm5102a";
+	};
+
+	sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "PCM5102A";
+		simple-audio-card,format = "i2s";
+
+		// "off-codec widgets"
+		// simple-audio-card,widgets { };
+
+		// simple-audio-card,routing { };
+
+		// if mclk-fs is set then:
+		//	- cpu is sysclk master
+		//	- sysclk is dynamically configured to mclk-fs * fs
+		// so this is almost never what you want!
+		// simple-audio-card,mclk-fs = <..>;
+
+		simple-audio-card,dai-link@0 {
+			format = "i2s";
+			frame-master = <&audio_master>;
+			bitclock-master = <&audio_master>;
+
+			audio_master: cpu {
+				sound-dai = <&mcasp0>;
+				clocks = <&clk_mcasp0>;
+			};
+
+			codec {
+				sound-dai = <&pcm5102a>;
+				clock-names = "mclk";
+			};
+		};
+	};
+};
