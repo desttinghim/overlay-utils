@@ -80,7 +80,6 @@ USES_PIN( P9_31 );
 
 			codec {
 				sound-dai = <&pcm5102a>;
-				clock-names = "mclk";
 			};
 		};
 	};
