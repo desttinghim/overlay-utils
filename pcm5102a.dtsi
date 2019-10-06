@@ -19,6 +19,7 @@ USES_PIN( P9_31 );
 };
 
 &mcasp0 {
+	#sound-dai-cells = <0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&asp0_pins>;
 	status = "okay";
